@@ -12,6 +12,11 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useRouter } from "next/router";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { useMemo } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { log } from "util";
 
 function Copyright(props: any) {
   return (
@@ -33,17 +38,40 @@ function Copyright(props: any) {
 
 const theme = createTheme();
 
+const schema = yup.object().shape({
+  email: yup.string().required("Email is required"),
+  password: yup.string().required("Password is required"),
+});
+
 export default function SignIn() {
   const router = useRouter();
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
+  const validationSchema = useMemo(() => {
+    return yup.object().shape({
+      email: yup.string().trim().required().label("Email"),
+      password: yup.string().trim().required().label("Password"),
     });
-    router.push("/student");
-  };
+  }, []);
+
+  // const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+  //   const data = new FormData(event.currentTarget);
+  //   console.log({
+  //     email: data.get("email"),
+  //     password: data.get("password"),
+  //   });
+  //   router.push("/student");
+  // };
+  const {
+    register,
+    setError,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<any>({
+    resolver: yupResolver(validationSchema),
+  });
+
+  const onSubmit = (data: any) => console.log("data----->", data);
 
   return (
     <ThemeProvider theme={theme}>
@@ -63,32 +91,28 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ mt: 1 }}
-          >
+          <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
               margin="normal"
-              required
               fullWidth
               id="email"
               label="Email Address"
-              name="email"
               autoComplete="email"
               autoFocus
+              helperText={errors.email?.message}
+              {...register("email")}
             />
+            {/*{errors.email && <p>{errors.email.message}</p>}*/}
             <TextField
               margin="normal"
-              required
               fullWidth
-              name="password"
               label="Password"
               type="password"
               id="password"
-              autoComplete="current-password"
+              helperText={errors.password?.message}
+              {...register("password")}
             />
+            {/*{errors.password && <p>{errors.password.message}</p>}*/}
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
@@ -101,20 +125,22 @@ export default function SignIn() {
             >
               Sign In
             </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  Forgot password?
-                </Link>
-              </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                  {"Don't have an account? Sign Up"}
-                </Link>
-              </Grid>
+          </form>
+
+          <Grid container>
+            <Grid item xs>
+              <Link href="#" variant="body2">
+                Forgot password?
+              </Link>
             </Grid>
-          </Box>
+            <Grid item>
+              <Link href="#" variant="body2">
+                {"Don't have an account? Sign Up"}
+              </Link>
+            </Grid>
+          </Grid>
         </Box>
+
         <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
     </ThemeProvider>
